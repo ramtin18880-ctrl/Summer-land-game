@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Summer Land</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#78c8ff;
+    touch-action:none;
+    font-family:Arial,sans-serif;
+}
+
+canvas{
+    display:block;
+}
+
+#title{
+    position:fixed;
+    top:12px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    color:white;
+    font-weight:bold;
+    font-size:19px;
+    text-shadow:0 2px 5px #000;
+    pointer-events:none;
+}
+
+#fps{
+    position:fixed;
+    top:10px;
+    right:10px;
+    z-index:20;
+    color:white;
+    background:rgba(0,0,0,.28);
+    padding:4px 7px;
+    border-radius:6px;
+    font-size:11px;
+    pointer-events:none;
+}
+
+#crosshair{
+    position:fixed;
+    left:50%;
+    top:50%;
+    width:17px;
+    height:17px;
+    transform:translate(-50%,-50%);
+    z-index:15;
+    pointer-events:none;
+}
+
+#crosshair:before,
+#crosshair:after{
+    content:"";
+    position:absolute;
+    background:#fff;
+    box-shadow:0 0 2px #000;
+}
+
+#crosshair:before{
+    width:2px;
+    height:17px;
+    left:7px;
+}
+
+#crosshair:after{
+    width:17px;
+    height:2px;
+    top:7px;
+}
+
+/* HAND */
+
+#hand{
+    position:fixed;
+    right:-18px;
+    bottom:91px;
+    width:120px;
+    height:185px;
+    z-index:12;
+    pointer-events:none;
+    transform:rotate(-8deg);
+}
+
+.arm{
+    position:absolute;
+    right:28px;
+    bottom:-25px;
+    width:59px;
+    height:155px;
+    border-radius:30px 30px 8px 8px;
+    background:linear-gradient(
+        90deg,
+        #b96d43,
+        #df9561,
+        #bd7046
+    );
+    box-shadow:
+        inset -9px 0 rgba(80,35,15,.15),
+        0 5px 12px rgba(0,0,0,.2);
+}
+
+.handSkin{
+    position:absolute;
+    right:21px;
+    bottom:83px;
+    width:69px;
+    height:73px;
+    border-radius:27px 27px 19px 19px;
+    background:#dc8e5a;
+    box-shadow:
+        inset -8px -4px rgba(100,45,20,.13),
+        0 4px 9px rgba(0,0,0,.2);
+}
+
+.finger{
+    position:absolute;
+    top:-25px;
+    width:18px;
+    height:45px;
+    border-radius:12px;
+    background:#e49b68;
+}
+
+.f1{right:38px;transform:rotate(-8deg)}
+.f2{right:21px;transform:rotate(-2deg)}
+.f3{right:4px;transform:rotate(6deg)}
+
+/* JOYSTICK */
+
+#joystick{
+    position:fixed;
+    left:22px;
+    bottom:104px;
+    width:132px;
+    height:132px;
+    border-radius:50%;
+    z-index:30;
+    background:rgba(255,255,255,.12);
+    border:2px solid rgba(255,255,255,.25);
+}
+
+#stick{
+    position:absolute;
+    left:35px;
+    top:35px;
+    width:62px;
+    height:62px;
+    border-radius:50%;
+    background:rgba(255,255,255,.43);
+    border:2px solid rgba(255,255,255,.48);
+    box-shadow:0 5px 14px rgba(0,0,0,.2);
+}
+
+/* BUTTONS */
+
+.control{
+    position:fixed;
+    z-index:35;
+    width:62px;
+    height:62px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-size:25px;
+    background:rgba(0,0,0,.27);
+    border:2px solid rgba(255,255,255,.32);
+    user-select:none;
+}
+
+#jump{
+    right:22px;
+    bottom:115px;
+}
+
+#break{
+    right:96px;
+    bottom:185px;
+}
+
+#place{
+    right:22px;
+    bottom:185px;
+}
+
+#sprint{
+    right:96px;
+    bottom:115px;
+}
+
+/* HOTBAR */
+
+#hotbar{
+    position:fixed;
+    left:50%;
+    bottom:14px;
+    transform:translateX(-50%);
+    display:flex;
+    gap:4px;
+    padding:5px;
+    z-index:40;
+    background:rgba(0,0,0,.34);
+    border-radius:8px;
+}
+
+.slot{
+    width:52px;
+    height:52px;
+    border-radius:5px;
+    border:2px solid rgba(255,255,255,.38);
+    background:rgba(25,25,25,.46);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+    font-size:25px;
+}
+
+.slot.selected{
+    border:3px solid white;
+    box-shadow:0 0 8px white;
+}
+
+/* INVENTORY */
+
+#inventory{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.68);
+}
+
+.invbox{
+    width:330px;
+    max-width:90%;
+    padding:15px;
+    border-radius:8px;
+    border:3px solid #777;
+    background:#20252a;
+    color:white;
+}
+
+.invtitle{
+    font-size:20px;
+    font-weight:bold;
+    margin-bottom:14px;
+}
+
+.invgrid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:6px;
+}
+
+.invslot{
+    height:54px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#111;
+    border:2px solid #555;
+    font-size:24px;
+}
+
+.closeInv{
+    margin-top:14px;
+    width:100%;
+    height:42px;
+    border:0;
+    border-radius:5px;
+    background:#4d9cff;
+    color:white;
+    font-size:16px;
+}
+
+@media(max-width:600px){
+
+    #hand{
+        right:-34px;
+        bottom:92px;
+        transform:scale(.82) rotate(-8deg);
+        transform-origin:bottom right;
+    }
+
+    #hotbar{
+        transform:translateX(-50%) scale(.78);
+        transform-origin:bottom center;
+    }
+
+    #joystick{
+        transform:scale(.88);
+        transform-origin:bottom left;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="title">☀️ SUMMER LAND</div>
+<div id="fps">-- FPS</div>
+
+<div id="crosshair"></div>
+
+<!-- First person hand -->
+<div id="hand">
+    <div class="arm"></div>
+    <div class="handSkin">
+        <div class="finger f1"></div>
+        <div class="finger f2"></div>
+        <div class="finger f3"></div>
+    </div>
+</div>
+
+<!-- Joystick -->
+<div id="joystick">
+    <div id="stick"></div>
+</div>
+
+<!-- Controls -->
+<div id="jump" class="control">⬆</div>
+<div id="break" class="control">⛏️</div>
+<div id="place" class="control">🧱</div>
+<div id="sprint" class="control">⚡</div>
+
+<!-- Hotbar -->
+<div id="hotbar">
+    <div class="slot selected" data-block="grass">🌿</div>
+    <div class="slot" data-block="dirt">🟫</div>
+    <div class="slot" data-block="stone">⬜</div>
+    <div class="slot" data-block="wood">🪵</div>
+    <div class="slot" data-block="leaves">🌳</div>
+    <div class="slot" data-block="sand">🟨</div>
+</div>
+
+<!-- Inventory -->
+<div id="inventory">
+
+    <div class="invbox">
+
+        <div class="invtitle">
+            🎒 Summer Land Inventory
+        </div>
+
+        <div class="invgrid">
+            <div class="invslot">🌿</div>
+            <div class="invslot">🟫</div>
+            <div class="invslot">⬜</div>
+            <div class="invslot">🪵</div>
+            <div class="invslot">🌳</div>
+            <div class="invslot">🟨</div>
+            <div class="invslot">💎</div>
+            <div class="invslot">🪨</div>
+            <div class="invslot">🍎</div>
+            <div class="invslot">🔥</div>
+        </div>
+
+        <button class="closeInv" onclick="closeInventory()">
+            بستن
+        </button>
+
+    </div>
+
+</div>
+
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+
+/* =====================================================
+   SUMMER LAND
+   Lightweight mobile voxel prototype
+===================================================== */
+
+
+/* ---------- Renderer ---------- */
+
+const scene = new THREE.Scene();
+
+scene.background =
+    new THREE.Color(0x78c8ff);
+
+scene.fog =
+    new THREE.Fog(
+        0x78c8ff,
+        30,
+        85
+    );
+
+const camera =
+    new THREE.PerspectiveCamera(
+        72,
+        innerWidth / innerHeight,
+        .1,
+        120
+    );
+
+camera.rotation.order = "YXZ";
+
+const renderer =
+    new THREE.WebGLRenderer({
+        antialias:false,
+        powerPreference:"high-performance"
+    });
+
+renderer.setSize(
+    innerWidth,
+    innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        1.1
+    )
+);
+
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type =
+    THREE.BasicShadowMap;
+
+renderer.outputColorSpace =
+    THREE.SRGBColorSpace;
+
+renderer.toneMapping =
+    THREE.ACESFilmicToneMapping;
+
+renderer.toneMappingExposure =
+    1.0;
+
+document.body.appendChild(
+    renderer.domElement
+);
+
+
+/* ---------- Lighting ---------- */
+
+const hemi =
+    new THREE.HemisphereLight(
+        0xbce8ff,
+        0x52663e,
+        1.15
+    );
+
+scene.add(hemi);
+
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        1.55
+    );
+
+sun.position.set(
+    -30,
+    50,
+    -25
+);
+
+sun.castShadow = true;
+
+sun.shadow.mapSize.width = 512;
+sun.shadow.mapSize.height = 512;
+
+sun.shadow.camera.left = -45;
+sun.shadow.camera.right = 45;
+sun.shadow.camera.top = 45;
+sun.shadow.camera.bottom = -45;
+
+scene.add(sun);
+
+
+/* ---------- Materials ---------- */
+
+const materials = {
+
+    grass:
+        new THREE.MeshLambertMaterial({
+            color:0x55a83e
+        }),
+
+    dirt:
+        new THREE.MeshLambertMaterial({
+            color:0x795132
+        }),
+
+    stone:
+        new THREE.MeshLambertMaterial({
+            color:0x858585
+        }),
+
+    wood:
+        new THREE.MeshLambertMaterial({
+            color:0x89532f
+        }),
+
+    leaves:
+        new THREE.MeshLambertMaterial({
+            color:0x34883c
+        }),
+
+    sand:
+        new THREE.MeshLambertMaterial({
+            color:0xddc67e
+        })
+};
+
+const cubeGeometry =
+    new THREE.BoxGeometry(
+        1,1,1
+    );
+
+
+/* =====================================================
+   BLOCK SYSTEM
+===================================================== */
+
+const blocks = new Map();
+
+function blockKey(
+    x,y,z
+){
+    return `${x}|${y}|${z}`;
+}
+
+function addBlock(
+    x,
+    y,
+    z,
+    type
+){
+
+    const id =
+        blockKey(x,y,z);
+
+    if(blocks.has(id))
+        return;
+
+    const mesh =
+        new THREE.Mesh(
+            cubeGeometry,
+            materials[type]
+        );
+
+    mesh.position.set(
+        x,
+        y,
+        z
+    );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    mesh.userData.block = {
+        x:x,
+        y:y,
+        z:z,
+        type:type
+    };
+
+    scene.add(mesh);
+
+    blocks.set(
+        id,
+        mesh
+    );
+
+    return mesh;
+}
+
+function removeBlock(
+    x,y,z
+){
+
+    const id =
+        blockKey(x,y,z);
+
+    const mesh =
+        blocks.get(id);
+
+    if(!mesh)
+        return;
+
+    scene.remove(mesh);
+
+    blocks.delete(id);
+}
+
+
+/* =====================================================
+   WORLD
+===================================================== */
+
+const WORLD_SIZE = 38;
+
+function createTree(
+    x,
+    z
+){
+
+    /* trunk */
+
+    for(
+        let y=1;
+        y<=4;
+        y++
+    ){
+
+        addBlock(
+            x,
+            y,
+            z,
+            "wood"
+        );
+    }
+
+    /* leaves */
+
+    for(
+        let dx=-2;
+        dx<=2;
+        dx++
+    ){
+
+        for(
+            let dz=-2;
+            dz<=2;
+            dz++
+        ){
+
+            if(
+                Math.abs(dx)+
+                Math.abs(dz)<=3
+            ){
+
+                addBlock(
+                    x+dx,
+                    5,
+                    z+dz,
+                    "leaves"
+                );
+            }
+        }
+    }
+
+    for(
+        let dx=-1;
+        dx<=1;
+        dx++
+    ){
+
+        for(
+            let dz=-1;
+            dz<=1;
+            dz++
+        ){
+
+            addBlock(
+                x+dx,
+                6,
+                z+dz,
+                "leaves"
+            );
+        }
+    }
+}
+
+
+function createWorld(){
+
+    for(
+        let x=-WORLD_SIZE;
+        x<=WORLD_SIZE;
+        x++
+    ){
+
+        for(
+            let z=-WORLD_SIZE;
+            z<=WORLD_SIZE;
+            z++
+        ){
+
+            const d =
+                Math.sqrt(
+                    x*x+z*z
+                );
+
+            let height = 0;
+
+            if(d < 13)
+                height = 1;
+
+            if(d < 7)
+                height = 2;
+
+            addBlock(
+                x,
+                0,
+                z,
+                "grass"
+            );
+
+            if(height >= 1){
+
+                addBlock(
+                    x,
+                    -1,
+                    z,
+                    "dirt"
+                );
+            }
+
+            if(height >= 2){
+
+                addBlock(
+                    x,
+                    -2,
+                    z,
+                    "stone"
+                );
+            }
+        }
+    }
+
+
+    /* Beach */
+
+    for(
+        let x=-WORLD_SIZE;
+        x<=WORLD_SIZE;
+        x++
+    ){
+
+        for(
+            let z=-WORLD_SIZE;
+            z<=WORLD_SIZE;
+            z++
+        ){
+
+            const d =
+                Math.sqrt(
+                    x*x+z*z
+                );
+
+            if(
+                d > 29 &&
+                d < 36
+            ){
+
+                addBlock(
+                    x,
+                    0,
+                    z,
+                    "sand"
+                );
+            }
+        }
+    }
+
+
+    /* Trees */
+
+    const trees = [
+
+        [-14,-10],
+        [-18,5],
+        [-11,16],
+        [3,-16],
+        [12,14],
+        [18,-5],
+        [23,9],
+        [-24,-15],
+        [-27,11]
+
+    ];
+
+    trees.forEach(
+        p => createTree(
+            p[0],
+            p[1]
+        )
+    );
+}
+
+createWorld();
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+const player = {
+
+    x:0,
+    y:3.05,
+    z:10,
+
+    velocityY:0,
+
+    height:1.7,
+    radius:.27,
+
+    grounded:false,
+
+    sprint:false
+};
+
+let yaw = 0;
+let pitch = 0;
+
+camera.position.set(
+    player.x,
+    player.y+.55,
+    player.z
+);
+
+
+/* =====================================================
+   COLLISION
+===================================================== */
+
+function blockExists(
+    x,y,z
+){
+
+    return blocks.has(
+        blockKey(
+            Math.floor(x),
+            Math.floor(y),
+            Math.floor(z)
+        )
+    );
+}
+
+
+function playerCollides(
+    x,
+    y,
+    z
+){
+
+    const r =
+        player.radius;
+
+    const minX =
+        Math.floor(x-r);
+
+    const maxX =
+        Math.floor(x+r);
+
+    const minY =
+        Math.floor(y);
+
+    const maxY =
+        Math.floor(
+            y+player.height
+        );
+
+    const minZ =
+        Math.floor(z-r);
+
+    const maxZ =
+        Math.floor(z+r);
+
+
+    for(
+        let bx=minX;
+        bx<=maxX;
+        bx++
+    ){
+
+        for(
+            let by=minY;
+            by<=maxY;
+            by++
+        ){
+
+            for(
+                let bz=minZ;
+                bz<=maxZ;
+                bz++
+            ){
+
+                if(
+                    blockExists(
+                        bx,
+                        by,
+                        bz
+                    )
+                ){
+
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+
+/* =====================================================
+   KEYBOARD
+===================================================== */
+
+const keys = {};
+
+window.addEventListener(
+    "keydown",
+    e => {
+
+        keys[e.code] = true;
+
+        if(
+            e.code === "Space"
+        ){
+            jump();
+        }
+
+        if(
+            e.code === "KeyE"
+        ){
+            mine();
+        }
+
+        if(
+            e.code === "KeyQ"
+        ){
+            placeBlock();
+        }
+
+        if(
+            e.code === "KeyI"
+        ){
+            openInventory();
+        }
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    e => {
+
+        keys[e.code] = false;
+    }
+);
+
+
+/* =====================================================
+   TOUCH CAMERA
+===================================================== */
+
+let lookTouch = null;
+
+renderer.domElement.addEventListener(
+    "touchstart",
+    e => {
+
+        for(
+            const t of e.changedTouches
+        ){
+
+            if(
+                t.clientX >
+                innerWidth*.42
+            ){
+
+                lookTouch = {
+
+                    id:t.identifier,
+
+                    x:t.clientX,
+
+                    y:t.clientY
+                };
+            }
+        }
+    },
+    {passive:false}
+);
+
+
+renderer.domElement.addEventListener(
+    "touchmove",
+    e => {
+
+        if(!lookTouch)
+            return;
+
+        for(
+            const t of e.changedTouches
+        ){
+
+            if(
+                t.identifier ===
+                lookTouch.id
+            ){
+
+                const dx =
+                    t.clientX -
+                    lookTouch.x;
+
+                const dy =
+                    t.clientY -
+                    lookTouch.y;
+
+                yaw -=
+                    dx*.0045;
+
+                pitch -=
+                    dy*.0045;
+
+                pitch =
+                    THREE.MathUtils.clamp(
+                        pitch,
+                        -1.35,
+                        1.35
+                    );
+
+                lookTouch.x =
+                    t.clientX;
+
+                lookTouch.y =
+                    t.clientY;
+            }
+        }
+
+        e.preventDefault();
+    },
+    {passive:false}
+);
+
+
+renderer.domElement.addEventListener(
+    "touchend",
+    e => {
+
+        if(!lookTouch)
+            return;
+
+        for(
+            const t of e.changedTouches
+        ){
+
+            if(
+                t.identifier ===
+                lookTouch.id
+            ){
+
+                lookTouch = null;
+            }
+        }
+    }
+);
+
+
+/* =====================================================
+   JOYSTICK
+===================================================== */
+
+const joystick =
+    document.getElementById(
+        "joystick"
+    );
+
+const stick =
+    document.getElementById(
+        "stick"
+    );
+
+let joystickX = 0;
+let joystickY = 0;
+let joystickID = null;
+
+
+function updateJoystick(
+    x,
+    y
+){
+
+    const rect =
+        joystick.getBoundingClientRect();
+
+    const centerX =
+        rect.left+
+        rect.width/2;
+
+    const centerY =
+        rect.top+
+        rect.height/2;
+
+    let dx =
+        x-centerX;
+
+    let dy =
+        y-centerY;
+
+    const max =
+        rect.width/2-31;
+
+    const distance =
+        Math.sqrt(
+            dx*dx+
+            dy*dy
+        );
+
+    if(
+        distance > max
+    ){
+
+        dx =
+            dx/distance*max;
+
+        dy =
+            dy/distance*max;
+    }
+
+    stick.style.transform =
+        `translate(${dx}px,${dy}px)`;
+
+    joystickX =
+        dx/max;
+
+    joystickY =
+        dy/max;
+}
+
+
+joystick.addEventListener(
+    "touchstart",
+    e => {
+
+        const t =
+            e.changedTouches[0];
+
+        joystickID =
+            t.identifier;
+
+        updateJoystick(
+            t.clientX,
+            t.clientY
+        );
+
+        e.preventDefault();
+    },
+    {passive:false}
+);
+
+
+joystick.addEventListener(
+    "touchmove",
+    e => {
+
+        for(
+            const t of e.changedTouches
+        ){
+
+            if(
+                t.identifier ===
+                joystickID
+            ){
+
+                updateJoystick(
+                    t.clientX,
+                    t.clientY
+                );
+            }
+        }
+
+        e.preventDefault();
+    },
+    {passive:false}
+);
+
+
+joystick.addEventListener(
+    "touchend",
+    e => {
+
+        for(
+            const t of e.changedTouches
+        ){
+
+            if(
+                t.identifier ===
+                joystickID
+            ){
+
+                joystickID = null;
+
+                joystickX = 0;
+                joystickY = 0;
+
+                stick.style.transform =
+                    "translate(0,0)";
+            }
+        }
+    }
+);
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+function setupButton(
+    id,
+    action
+){
+
+    const element =
+        document.getElementById(id);
+
+    element.addEventListener(
+        "touchstart",
+        e => {
+
+            e.preventDefault();
+
+            action();
+        },
+        {passive:false}
+    );
+
+    element.addEventListener(
+        "mousedown",
+        e => {
+
+            action();
+        }
+    );
+}
+
+setupButton(
+    "jump",
+    jump
+);
+
+setupButton(
+    "break",
+    mine
+);
+
+setupButton(
+    "p
